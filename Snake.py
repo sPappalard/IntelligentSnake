@@ -78,10 +78,31 @@ class Game:
         self.game_quit = False
 
     def spawn_food(self):
-        while True:
+        attempts = 0
+        max_attempts = 100  # Limite di sicurezza
+        
+        while attempts < max_attempts:
             pos = (random.randint(0, GRID_COUNT-1), random.randint(0, GRID_COUNT-1))
+            # Verifica esplicita per modalità BORDER
+            if pos[0] == 0 or pos[0] == GRID_COUNT-1 or pos[1] == 0 or pos[1] == GRID_COUNT-1:
+                # Posizione sul bordo, non valida
+                attempts += 1
+                continue
+            
             if pos not in self.snake and pos not in self.barriers:
                 return pos
+            
+            attempts += 1
+        
+        # Fallback: trova qualsiasi posizione libera non sul bordo
+        for x in range(1, GRID_COUNT-1):
+            for y in range(1, GRID_COUNT-1):
+                pos = (x, y)
+                if pos not in self.snake and pos not in self.barriers:
+                    return pos
+        
+        # Ultima risorsa se tutto il resto fallisce
+        return (GRID_COUNT//2, GRID_COUNT//2)
 
     def create_random_barriers(self):
         self.barriers = []
