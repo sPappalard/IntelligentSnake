@@ -29,9 +29,9 @@ FONT_SMALL = pygame.font.Font(None, 24)
 
 # Classi di enumerazione
 class Difficulty(Enum):
-    EASY = 0.2
-    MEDIUM = 0.15
-    HARD = 0.1
+    EASY = 0.14
+    MEDIUM = 0.1
+    HARD = 0.08
 
 class GameMode(Enum):
     POINTS = "POINTS"
@@ -568,79 +568,79 @@ class Game:
         # Constants for pagination
         STATS_PER_PAGE = 10
         current_page = 0
-        
+
         button_width = 300
         button_height = 40
         button_spacing = 20
-        
+
         # Create buttons for navigation
         back_button = Button(20, WINDOW_SIZE - 60, 150, 40, "Back", (128, 0, 0))
         prev_button = Button(WINDOW_SIZE//2 - 160, WINDOW_SIZE - 60, 150, 40, "Previous", (0, 128, 128))
         next_button = Button(WINDOW_SIZE//2 + 10, WINDOW_SIZE - 60, 150, 40, "Next", (0, 128, 128))
         reset_button = Button(WINDOW_SIZE - 170, WINDOW_SIZE - 60, 150, 40, "Reset", (128, 0, 0))
-        
+
         showing_stats = True
         while showing_stats:
             mouse_pos = pygame.mouse.get_pos()
             self.screen.fill(DARK_GRAY)
-            
+
             # Update button hover states
             back_button.update(mouse_pos)
             prev_button.update(mouse_pos)
             next_button.update(mouse_pos)
             reset_button.update(mouse_pos)
-            
+
             # Calculate total pages
             total_pages = max(1, (len(self.stats) + STATS_PER_PAGE - 1) // STATS_PER_PAGE)
-            
+
             # Draw title
             title = FONT_LARGE.render("HIGH SCORES", True, WHITE)
             title_rect = title.get_rect(center=(WINDOW_SIZE//2, 50))
             self.screen.blit(title, title_rect)
-            
+
             # Draw stats
             if self.stats:
                 start_idx = current_page * STATS_PER_PAGE
                 end_idx = min(start_idx + STATS_PER_PAGE, len(self.stats))
-                y_pos = 120
-                
+                y_pos = 100  # Start position for stats
+
                 # Headers
                 headers = ["Player", "Score", "Mode", "Difficulty", "Duration"]
-                x_positions = [50, 250, 400, 550, 650]
+                x_positions = [50, 200, 350, 500, 650]
                 for header, x in zip(headers, x_positions):
                     text = FONT_SMALL.render(header, True, (200, 200, 200))
                     self.screen.blit(text, (x, y_pos))
-                
-                y_pos += 40
-                
+
+                y_pos += 40  # Space between headers and stats
+
                 # Stats entries
                 for i in range(start_idx, end_idx):
                     stat = self.stats[i]
                     color = WHITE if i % 2 == 0 else (200, 200, 200)
-                    
+
                     # Player name
                     text = FONT_SMALL.render(str(stat['player_name'])[:15], True, color)
                     self.screen.blit(text, (50, y_pos))
-                    
+
                     # Score
                     text = FONT_SMALL.render(str(stat['score']), True, color)
-                    self.screen.blit(text, (250, y_pos))
-                    
+                    self.screen.blit(text, (200, y_pos))
+
                     # Mode
                     text = FONT_SMALL.render(str(stat['mode']), True, color)
-                    self.screen.blit(text, (400, y_pos))
-                    
+                    self.screen.blit(text, (350, y_pos))
+
                     # Difficulty
                     text = FONT_SMALL.render(str(stat['difficulty']), True, color)
-                    self.screen.blit(text, (550, y_pos))
-                    
+                    self.screen.blit(text, (500, y_pos))
+
                     # Duration
                     duration = f"{stat['duration']:.1f}s"
                     text = FONT_SMALL.render(duration, True, color)
                     self.screen.blit(text, (650, y_pos))
-                    
-                    y_pos += 30
-                
+
+                    y_pos += 30  # Space between rows
+
                 # Page indicator
                 page_text = FONT_SMALL.render(f"Page {current_page + 1} of {total_pages}", True, WHITE)
                 page_rect = page_text.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE - 100))
@@ -650,7 +650,7 @@ class Game:
                 no_stats = FONT_MEDIUM.render("No statistics available", True, WHITE)
                 no_stats_rect = no_stats.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE//2))
                 self.screen.blit(no_stats, no_stats_rect)
-            
+
             # Draw buttons
             back_button.draw(self.screen)
             if total_pages > 1:
@@ -659,7 +659,7 @@ class Game:
                 if current_page < total_pages - 1:
                     next_button.draw(self.screen)
             reset_button.draw(self.screen)
-            
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return
@@ -673,7 +673,7 @@ class Game:
                     elif reset_button.is_clicked(event.pos):
                         self.reset_stats()
                         showing_stats = False
-                        
+
             pygame.display.flip()
             self.clock.tick(60)
 
