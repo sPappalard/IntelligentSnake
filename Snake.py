@@ -68,7 +68,7 @@ class Button:
 class Game:
     def __init__(self):
         self.screen = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
-        pygame.display.set_caption("Modern Snake")
+        pygame.display.set_caption("The Snake")
         self.clock = pygame.time.Clock()
         self.last_direction_change = time.time()
         self.direction_change_cooldown = 0.1
