@@ -1,33 +1,37 @@
-import pygame
-import random
-import time
-import json
-import math
-from enum import Enum
-from dataclasses import dataclass
-from typing import List, Tuple
+import pygame                       #for graphics and game mechanics
+import random                       #for food and barrier placement
+import time                         #for game timing and cooldowns
+import json                         #for storing game statistics
+import math                         #for visual effects (pulsing colors)
+from enum import Enum               #for game state constants
+from dataclasses import dataclass   
+from typing import List, Tuple      #for typing hints
 
-# Inizializzazione Pygame
+# Initialization Pygame
 pygame.init()
 
 
-# Costanti
+# Costants
 WINDOW_SIZE = 600
 GRID_SIZE = 25
 GRID_COUNT = WINDOW_SIZE // GRID_SIZE
+
+#colors
 DARK_GRAY = (40, 40, 40)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 99, 71)
 NEON_GREEN = (57, 255, 20)
-GAME_TIME = 180  # 3 minuti in secondi
 
-# Font personalizzati
+#game time limit (in seconds)
+GAME_TIME = 180  # 3 minutes 
+
+# Fonts (for differents UI elements)
 FONT_LARGE = pygame.font.Font(None, 48)
 FONT_MEDIUM = pygame.font.Font(None, 36)
 FONT_SMALL = pygame.font.Font(None, 24)
 
-# Classi di enumerazione
+#classes of enumeration
 class Difficulty(Enum):
     EASY = 0.14
     MEDIUM = 0.1
@@ -42,7 +46,11 @@ class Barrier(Enum):
     BORDER = "BORDER"
     RANDOM = "RANDOM"
 
+
+#to create clickable UI buttons
 class Button:
+    
+    #constructor that define button's main properties (position, size, text, color, hover color)
     def __init__(self, x, y, width, height, text, color=(100, 100, 100), hover_color=(150, 150, 150)):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
@@ -50,6 +58,7 @@ class Button:
         self.hover_color = hover_color
         self.is_hovered = False
 
+    #to draw the button in the game window 
     def draw(self, screen):
         color = self.hover_color if self.is_hovered else self.color
         pygame.draw.rect(screen, color, self.rect, border_radius=10)
@@ -59,49 +68,58 @@ class Button:
         text_rect = text_surface.get_rect(center=self.rect.center)
         screen.blit(text_surface, text_rect)
 
+    #to update the state of the button
     def update(self, mouse_pos):
         self.is_hovered = self.rect.collidepoint(mouse_pos)
 
+    #to verify if the button was clicked
     def is_clicked(self, pos):
         return self.rect.collidepoint(pos)
 
+#the main class that contain ALL THE GAME LOGIC
 class Game:
     def __init__(self):
         self.screen = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
         pygame.display.set_caption("The Snake")
-        self.clock = pygame.time.Clock()
+        #to control the framrate of the game
+        self.clock = pygame.time.Clock()     
+        #to prevent the player from changing direction too quickly
         self.last_direction_change = time.time()
         self.direction_change_cooldown = 0.1
+
         self.barriers = []
         self.reset_game()
         self.load_stats()
         self.game_quit = False
 
+    #to spawn the food using 100 attempts, and a Fallback strategy after the 100th attemps
     def spawn_food(self):
         attempts = 0
-        max_attempts = 100  # Limite di sicurezza
+        max_attempts = 100  
         
+        #100 attempts
         while attempts < max_attempts:
+            #try to generate the food in a random position
             pos = (random.randint(0, GRID_COUNT-1), random.randint(0, GRID_COUNT-1))
-            # Verifica esplicita per modalità BORDER
+
+            # Avoid generating food on the edge (for BORDER MODE)
             if pos[0] == 0 or pos[0] == GRID_COUNT-1 or pos[1] == 0 or pos[1] == GRID_COUNT-1:
-                # Posizione sul bordo, non valida
                 attempts += 1
                 continue
             
+            #avoid generating food where there is the snake and where there are barriers
             if pos not in self.snake and pos not in self.barriers:
                 return pos
-            
             attempts += 1
         
-        # Fallback: trova qualsiasi posizione libera non sul bordo
+        # Fallback strategy afte 100 attemps: find any free position not on the edge
         for x in range(1, GRID_COUNT-1):
             for y in range(1, GRID_COUNT-1):
                 pos = (x, y)
                 if pos not in self.snake and pos not in self.barriers:
                     return pos
         
-        # Ultima risorsa se tutto il resto fallisce
+        # If all else fails: generate the food in the center of the grid
         return (GRID_COUNT//2, GRID_COUNT//2)
 
     def create_random_barriers(self):
