@@ -646,30 +646,35 @@ class Game:
                     })
                     #writes the data to a json file to keep it even after the game is closed
                     self.save_stats()
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    #to show the game over screen
     def show_game_over(self, player_name, score):
         alpha = 0
         fade_speed = 5
         overlay = pygame.Surface((WINDOW_SIZE, WINDOW_SIZE))
         overlay.fill(BLACK)
         
+        #fade effect to appear the game-over screen
         while alpha < 128:
             overlay.set_alpha(alpha)
             self.screen.blit(overlay, (0, 0))
             alpha += fade_speed
             pygame.display.flip()
             self.clock.tick(60)
-            
+
+        #create the texts to show    
         game_over_text = FONT_LARGE.render("GAME OVER", True, WHITE)
         score_text = FONT_MEDIUM.render(f"Final Score: {score}", True, WHITE)
         player_text = FONT_MEDIUM.render(f"Player: {player_name}", True, WHITE)
         continue_text = FONT_SMALL.render("Press any key to continue", True, WHITE)
         
+        #Place texts in the center of the screen
         game_over_rect = game_over_text.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE//2 - 60))
         score_rect = score_text.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE//2))
         player_rect = player_text.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE//2 + 40))
         continue_rect = continue_text.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE//2 + 100))
         
+        #Wait for the player to press a button before exiting the Game Over screen
         waiting = True
         while waiting:
             for event in pygame.event.get():
@@ -677,7 +682,7 @@ class Game:
                     return
                 if event.type == pygame.KEYDOWN:
                     waiting = False
-                    
+            #draw texts in the Game Over screen 
             overlay.set_alpha(128)
             self.screen.blit(overlay, (0, 0))
             self.screen.blit(game_over_text, game_over_rect)
@@ -687,16 +692,16 @@ class Game:
             pygame.display.flip()
             self.clock.tick(60)
 
+    #to show a table with saved scores, broken down by page (10 per page)
     def show_stats(self):
-        # Constants for pagination
+        #Constants for pagination
         STATS_PER_PAGE = 10
         current_page = 0
-
         button_width = 300
         button_height = 40
         button_spacing = 20
 
-        # Create buttons for navigation
+        #Create buttons for navigation
         back_button = Button(20, WINDOW_SIZE - 60, 150, 40, "Back", (128, 0, 0))
         prev_button = Button(WINDOW_SIZE//2 - 160, WINDOW_SIZE - 60, 150, 40, "Previous", (0, 128, 128))
         next_button = Button(WINDOW_SIZE//2 + 10, WINDOW_SIZE - 60, 150, 40, "Next", (0, 128, 128))
@@ -707,74 +712,74 @@ class Game:
             mouse_pos = pygame.mouse.get_pos()
             self.screen.fill(DARK_GRAY)
 
-            # Update button hover states
+            #Update button hover states
             back_button.update(mouse_pos)
             prev_button.update(mouse_pos)
             next_button.update(mouse_pos)
             reset_button.update(mouse_pos)
 
-            # Calculate total pages
+            #Calculate total pages in according to the amount of stats
             total_pages = max(1, (len(self.stats) + STATS_PER_PAGE - 1) // STATS_PER_PAGE)
 
-            # Draw title
+            #Draw title
             title = FONT_LARGE.render("HIGH SCORES", True, WHITE)
             title_rect = title.get_rect(center=(WINDOW_SIZE//2, 50))
             self.screen.blit(title, title_rect)
 
-            # Draw stats
+            #Draw the table of stats
             if self.stats:
                 start_idx = current_page * STATS_PER_PAGE
                 end_idx = min(start_idx + STATS_PER_PAGE, len(self.stats))
-                y_pos = 100  # Start position for stats
+                y_pos = 100  #Start position for stats
 
-                # Headers
+                #headers
                 headers = ["Player", "Score", "Mode", "Difficulty", "Duration"]
                 x_positions = [50, 200, 350, 500, 650]
                 for header, x in zip(headers, x_positions):
                     text = FONT_SMALL.render(header, True, (200, 200, 200))
                     self.screen.blit(text, (x, y_pos))
 
-                y_pos += 40  # Space between headers and stats
+                y_pos += 40  #Space between headers and stats
 
-                # Stats entries
+                #Shows the saved data on the screen, alternating coloring the lines
                 for i in range(start_idx, end_idx):
                     stat = self.stats[i]
                     color = WHITE if i % 2 == 0 else (200, 200, 200)
 
-                    # Player name
+                    #Player name
                     text = FONT_SMALL.render(str(stat['player_name'])[:15], True, color)
                     self.screen.blit(text, (50, y_pos))
 
-                    # Score
+                    #Score
                     text = FONT_SMALL.render(str(stat['score']), True, color)
                     self.screen.blit(text, (200, y_pos))
 
-                    # Mode
+                    #Mode
                     text = FONT_SMALL.render(str(stat['mode']), True, color)
                     self.screen.blit(text, (350, y_pos))
 
-                    # Difficulty
+                    #Difficulty
                     text = FONT_SMALL.render(str(stat['difficulty']), True, color)
                     self.screen.blit(text, (500, y_pos))
 
-                    # Duration
+                    #Duration
                     duration = f"{stat['duration']:.1f}s"
                     text = FONT_SMALL.render(duration, True, color)
                     self.screen.blit(text, (650, y_pos))
 
-                    y_pos += 30  # Space between rows
+                    y_pos += 30  #Space between rows
 
-                # Page indicator
+                #Page indicator
                 page_text = FONT_SMALL.render(f"Page {current_page + 1} of {total_pages}", True, WHITE)
                 page_rect = page_text.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE - 100))
                 self.screen.blit(page_text, page_rect)
             else:
-                # No stats message
+                #No stats message
                 no_stats = FONT_MEDIUM.render("No statistics available", True, WHITE)
                 no_stats_rect = no_stats.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE//2))
                 self.screen.blit(no_stats, no_stats_rect)
 
-            # Draw buttons
+            #Draw buttons
             back_button.draw(self.screen)
             if total_pages > 1:
                 if current_page > 0:
@@ -783,6 +788,7 @@ class Game:
                     next_button.draw(self.screen)
             reset_button.draw(self.screen)
 
+            #Managing button clicks
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return
