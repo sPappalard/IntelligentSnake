@@ -121,9 +121,12 @@ class Game:
         
         # If all else fails: generate the food in the center of the grid
         return (GRID_COUNT//2, GRID_COUNT//2)
-
+    
+    #to create 5 random barriers (for RANDOM BARRIERS mode)
     def create_random_barriers(self):
         self.barriers = []
+
+        #define a safe zone (in the center of the grid, 5x5) where no barriers will be placed
         safe_zone = set()
         center = (GRID_COUNT//2, GRID_COUNT//2)
         for x in range(center[0]-2, center[0]+3):
@@ -131,7 +134,9 @@ class Game:
                 if 0 <= x < GRID_COUNT and 0 <= y < GRID_COUNT:
                     safe_zone.add((x, y))
 
+        #generate 5 random barriers
         for _ in range(5):
+            #horizontal barrier 
             y = random.randint(1, GRID_COUNT-2)
             length = random.randint(3, 8)
             start_x = random.randint(0, GRID_COUNT-length)
@@ -139,6 +144,7 @@ class Game:
             if not any(pos in safe_zone for pos in barrier_line):
                 self.barriers.extend(barrier_line)
 
+            #vertical barrier
             x = random.randint(1, GRID_COUNT-2)
             length = random.randint(3, 8)
             start_y = random.randint(0, GRID_COUNT-length)
@@ -146,44 +152,64 @@ class Game:
             if not any(pos in safe_zone for pos in barrier_line):
                 self.barriers.extend(barrier_line)
 
+    #to create border barriers (BORDER mode)
     def create_border_barriers(self):
-        self.barriers = [(x, 0) for x in range(GRID_COUNT)]
-        self.barriers.extend([(x, GRID_COUNT-1) for x in range(GRID_COUNT)])
-        self.barriers.extend([(0, y) for y in range(GRID_COUNT)])
-        self.barriers.extend([(GRID_COUNT-1, y) for y in range(GRID_COUNT)])
+        self.barriers = [(x, 0) for x in range(GRID_COUNT)]     #upper edge
+        self.barriers.extend([(x, GRID_COUNT-1) for x in range(GRID_COUNT)])  #lower edge  
+        self.barriers.extend([(0, y) for y in range(GRID_COUNT)])       #left edge
+        self.barriers.extend([(GRID_COUNT-1, y) for y in range(GRID_COUNT)])        #right edge
 
+    #to allow the "wrap-around": the snake can cross the edges and reappear from the opposite side
     def wrap_position(self, pos):
         x, y = pos
         return (x % GRID_COUNT, y % GRID_COUNT)
 
+    #to load the stats from a json file called "snake_stats.json"
     def load_stats(self):
         try:
+            #try to open the file (if exist, read it and save the stats into the list self.stats)
             with open('snake_stats.json', 'r') as f:
                 self.stats = json.load(f)
+        #if the file doesn't exist: initialize self.stats like an empty list
         except FileNotFoundError:
             self.stats = []
 
+    #to save the current stats into a json called "snake_stats.json"
     def save_stats(self):
         with open('snake_stats.json', 'w') as f:
             json.dump(self.stats, f)
 
+    #to reset stats
     def reset_stats(self):
         self.stats = []
         self.save_stats()
 
+    #to reset the game
     def reset_game(self):
+        #the snake start from the center
         self.snake = [(GRID_COUNT//2, GRID_COUNT//2)]
+        #starting direction (goes to the right)
         self.direction = (1, 0)
+        #next direction (to avoid multiple input)
         self.next_direction = (1, 0)
+        #no barrier at the beginning
         self.barriers = []
+        #generate food
         self.food = self.spawn_food()
+        #dynamic food color  
         self.food_color = self.pulse_color()
+        #color of the snake
         self.snake_color = NEON_GREEN
+        #starting score
         self.score = 0
+        #starting time
         self.start_time = time.time()
+        #the game is active
         self.game_quit = False
+        #particle effects reset
         self.particle_effects = []
 
+    #to generate a color (for the food) that change during the time (using a sin function)
     def pulse_color(self):
         t = time.time() * 2
         r = int(255 * (0.5 + 0.5 * math.sin(t)))
@@ -191,68 +217,83 @@ class Game:
         b = int(100 * (0.5 + 0.5 * math.sin(t + 4)))
         return (r, g, b)
 
+    #to show a window to insert the name of the player
     def get_player_name(self):
         input_box = pygame.Rect(WINDOW_SIZE//4, WINDOW_SIZE//2 - 50, WINDOW_SIZE//2, 60)
         text = ""
+        #to indicate that the window is active and is waiting for the input
         active = True
+        #to handle the flashing cursor
         cursor_visible = True
+        #to check the time between flashes
         cursor_timer = 0
 
+        #to maintain the window active until the name is entered and confermed
         while active:
             current_time = time.time()
             
-            # Aggiorna il cursore ogni 0.5 secondi
+            # Updates the slider every 0.5 seconds: the cursor appear and disappear
             if current_time - cursor_timer >= 0.5:
                 cursor_visible = not cursor_visible
                 cursor_timer = current_time
 
             self.screen.fill(DARK_GRAY)
             
-            # Disegna il titolo
-            title = FONT_LARGE.render("INSERISCI IL TUO NOME", True, WHITE)
+            # Draw the title
+            title = FONT_LARGE.render("INSERT YOUR NAME", True, WHITE)
             title_rect = title.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE//2 - 150))
             self.screen.blit(title, title_rect)
 
-            # Disegna il box di input
+            # Draw the input box
             pygame.draw.rect(self.screen, BLACK, input_box, border_radius=10)
             pygame.draw.rect(self.screen, WHITE, input_box, 2, border_radius=10)
 
-            # Disegna il testo inserito
+            # Draw the inserted text
             txt_surface = FONT_MEDIUM.render(text + ("|" if cursor_visible else ""), True, WHITE)
             text_rect = txt_surface.get_rect(center=input_box.center)
             self.screen.blit(txt_surface, text_rect)
 
-            # Disegna il testo di aiuto
-            help_text = FONT_SMALL.render("Premi ENTER per confermare", True, WHITE)
+            # Draw the help text
+            help_text = FONT_SMALL.render("Press ENTER to confirm", True, WHITE)
             help_rect = help_text.get_rect(center=(WINDOW_SIZE//2, WINDOW_SIZE//2 + 50))
             self.screen.blit(help_text, help_rect)
-
+            
+            #Event management (user input)
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+                 #if the user close the window
+                if event.type == pygame.QUIT: 
                     return None
+                #if the user press a key
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN and text:
+                    #if press ENTER    
+                    if event.key == pygame.K_RETURN and text: 
                         return text
+                    #if press BACKSPACE   
                     elif event.key == pygame.K_BACKSPACE:
                         text = text[:-1]
-                    elif len(text) < 20 and event.unicode.isalnum():  # Limite di 20 caratteri
+                    #limit of 20 characters
+                    elif len(text) < 20 and event.unicode.isalnum():  
                         text += event.unicode
 
+            #update the screen 60 time per second
             pygame.display.flip()
             self.clock.tick(60)
 
+    #to handle the main menu
     def main_menu(self):
+        #Setting initial options
         difficulty = Difficulty.EASY
         game_mode = GameMode.POINTS
         barrier_type = Barrier.NONE
         color_change = False
         
-        # Centra i pulsanti e usa dimensioni consistenti
+        #Center the buttons and use consistent size
         button_width = 300
         button_height = 60
         button_spacing = 20
         start_y = WINDOW_SIZE//2 - (5 * (button_height + button_spacing))//2
 
+        #create the buttons
         buttons = {
             'difficulty': Button(WINDOW_SIZE//2 - button_width//2, start_y, 
                                button_width, button_height, 
@@ -274,10 +315,11 @@ class Game:
                           "View Stats", (128, 0, 128))
         }
 
+        #Keeps the menu active until the player starts the game or closes the window
         while True:
             mouse_pos = pygame.mouse.get_pos()
-            
-            # Sfondo animato
+
+            #to generate the animated background: Generate an animated visual effect with small dots on the background
             self.screen.fill(DARK_GRAY)
             current_time = time.time()
             for x in range(0, WINDOW_SIZE, 40):
@@ -286,27 +328,34 @@ class Game:
                     pygame.draw.rect(self.screen, (0, color_value//4, color_value//4), 
                                    (x, y, 2, 2))
 
-            # Titolo animato
+            #draw the title MODERN SNAKE 
             title = FONT_LARGE.render("MODERN SNAKE", True, WHITE)
             title_pos = (WINDOW_SIZE//2, start_y - 80)
             title_rect = title.get_rect(center=title_pos)
             self.screen.blit(title, title_rect)
 
-            # Aggiorna e disegna i pulsanti
+            #Update the status of buttons (change color when hovering) and draw them
             for button in buttons.values():
                 button.update(mouse_pos)
                 button.draw(self.screen)
 
+            #event management
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return None
+
+                #to handle buttons click 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
                     
                     if buttons['difficulty'].is_clicked(pos):
+                        #transform Difficulty (enum) to a LIST
                         difficulties = list(Difficulty)
+                        #find the current difficulty index
                         current_idx = difficulties.index(difficulty)
+                        #Go to next difficulty
                         difficulty = difficulties[(current_idx + 1) % len(difficulties)]
+                        #update text of the button with the new difficulty
                         buttons['difficulty'].text = f"Difficulty: {difficulty.name}"
                     
                     elif buttons['mode'].is_clicked(pos):
@@ -326,7 +375,9 @@ class Game:
                         buttons['color'].text = f"Color Change: {color_change}"
                     
                     elif buttons['start'].is_clicked(pos):
+                        #ask for the player's name
                         player_name = self.get_player_name()
+                        #if the player entered a valid name: start the game
                         if player_name:
                             return {
                                 'difficulty': difficulty,
@@ -339,40 +390,55 @@ class Game:
                     elif buttons['stats'].is_clicked(pos):
                         self.show_stats()
 
+            #update the screen 60 time per second
             pygame.display.flip()
             self.clock.tick(60)
 
+    #main game loop
     def run(self):
         while True:
+            #show the menu with the chosen settings
             settings = self.main_menu()
             if settings is None:
                 break
-                
+
+            #reset the state of the game    
             self.reset_game()
             
+            #if the player chosed the mode with Barriers: create the right barriers
             if settings['barrier'] == Barrier.BORDER:
                 self.create_border_barriers()
             elif settings['barrier'] == Barrier.RANDOM:
                 self.create_random_barriers()
 
+            #START OF THE GAME 
             game_over = False
+            #save the starting game time
             start_time = time.time()
+            #save the ending game time
             last_move_time = time.time()
+            #set the speed of the snake according to the chosen difficulty
             move_delay = settings['difficulty'].value
             
+            #GAME LOOP
             while not game_over:
                 current_time = time.time()
                 
+                #player's input management
                 for event in pygame.event.get():
+                    #if he close the windiow: game ends
                     if event.type == pygame.QUIT:
                         return
                     if event.type == pygame.KEYDOWN:
+                        #if he press ESC
                         if event.key == pygame.K_ESCAPE:
                             self.game_quit = True
                             game_over = True
+                        #change direction using UP,DOWN,LEFT,RIGHT     
                         elif current_time - self.last_direction_change >= self.direction_change_cooldown:
                             if event.key == pygame.K_UP and self.direction != (0, 1):
                                 self.next_direction = (0, -1)
+                                #cooldown to avoid changes of direction too fast
                                 self.last_direction_change = current_time
                             elif event.key == pygame.K_DOWN and self.direction != (0, -1):
                                 self.next_direction = (0, 1)
