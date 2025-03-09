@@ -450,46 +450,58 @@ class Game:
                                 self.next_direction = (1, 0)
                                 self.last_direction_change = current_time
 
+                #The snake moves only after the time set by the difficulty has passed
                 if current_time - last_move_time >= move_delay:
+                    #snake's movement
                     self.direction = self.next_direction
                     last_move_time = current_time
-                    
-                    # Movimento serpente
+                    #The new position of the snake’s head is calculated
                     head = self.snake[0]
                     new_head = (head[0] + self.direction[0], head[1] + self.direction[1])
 
+                    #collisions management
+                    #NORMAL MODE
                     if settings['barrier'] == Barrier.NONE:
                         new_head = self.wrap_position(new_head)
-                        if new_head in self.snake[1:]:  # Controlla collisione solo con il corpo
+                        #Check collision with body only
+                        if new_head in self.snake[1:]:  
                             game_over = True
                             continue
+                    #RANDOM BARRIERS MODE
                     elif settings['barrier'] == Barrier.RANDOM:
+                        #check collision with random barriers
                         if new_head in self.barriers:
                             game_over = True
                             continue
                         new_head = self.wrap_position(new_head)
+                        #Check collision with body
                         if new_head in self.snake[1:]:
                             game_over = True
                             continue
+                    #BORDER MODE
                     else:
+                        #check collision with body and with wall
                         if (new_head in self.snake[1:] or 
                             new_head in self.barriers or 
                             new_head[0] < 0 or new_head[0] >= GRID_COUNT or 
                             new_head[1] < 0 or new_head[1] >= GRID_COUNT):
                             game_over = True
                             continue
-
+                    
+                    #the snake grow constantly (but if he didn't eat, he also reduces constantly-see the else condition: the result is that remain the same if don't eat)
                     self.snake.insert(0, new_head)
                     
-                    # Controllo cibo
+                    #if the snake eats food
                     if new_head == self.food:
                         self.score += 10
                         if settings['color_change']:
                             self.snake_color = self.food_color
+
+                        #new food is generated
                         self.food = self.spawn_food()
                         self.food_color = self.pulse_color()
                         
-                        # Aggiungi particelle per effetto speciale
+                        #Coloured particles are generated when food is eaten
                         for _ in range(10):
                             self.particle_effects.append({
                                 'pos': (new_head[0] * GRID_SIZE + GRID_SIZE//2, 
@@ -499,9 +511,10 @@ class Game:
                                 'color': self.food_color
                             })
                     else:
+                        #if the snake didn't eat: Last tail segment is removed (the snake does not grow)
                         self.snake.pop()
 
-                    # Aggiorna particelle
+                    # Update particles: The particles move and disappear gradually
                     for particle in self.particle_effects[:]:
                         particle['ttl'] -= move_delay
                         if particle['ttl'] <= 0:
@@ -510,25 +523,28 @@ class Game:
                             particle['pos'] = (particle['pos'][0] + particle['vel'][0],
                                              particle['pos'][1] + particle['vel'][1])
 
-                # Controllo vittoria/tempo
+                # Win/time control
                 current_time = time.time() - start_time
                 remaining_time = GAME_TIME - current_time
                 
+                #If the player has reached 1,000,000 points (impossible scenario), he wins
                 if settings['mode'] == GameMode.POINTS and self.score >= 1000000:
                     game_over = True
+                #If you are playing on time mode, the game ends when time runs out
                 elif settings['mode'] == GameMode.TIME and remaining_time <= 0:
                     game_over = True
 
-                # Disegno
+
+                #DESIGN OF ELEMENTS: Each element is redesigned for each frame
+
+                #background fill
                 self.screen.fill(DARK_GRAY)
-                
-                # Disegna griglia sottile
                 for x in range(0, WINDOW_SIZE, GRID_SIZE):
                     pygame.draw.line(self.screen, (60, 60, 60), (x, 0), (x, WINDOW_SIZE))
                 for y in range(0, WINDOW_SIZE, GRID_SIZE):
                     pygame.draw.line(self.screen, (60, 60, 60), (0, y), (WINDOW_SIZE, y))
                 
-                # Disegno barriere con effetto gradiente
+                #barriers
                 for barrier in self.barriers:
                     pygame.draw.rect(self.screen, RED,
                                   (barrier[0] * GRID_SIZE, barrier[1] * GRID_SIZE,
@@ -537,33 +553,34 @@ class Game:
                                   (barrier[0] * GRID_SIZE + 2, barrier[1] * GRID_SIZE + 2,
                                    GRID_SIZE - 4, GRID_SIZE - 4))
 
-                # Disegno serpente con effetto gradiente
+                #snake
                 for i, segment in enumerate(self.snake):
                     color = self.snake_color
-                    if i == 0:  # Testa del serpente
+                    #HEAD
+                    if i == 0:
                         pygame.draw.rect(self.screen, color,
                                       (segment[0] * GRID_SIZE, segment[1] * GRID_SIZE,
                                        GRID_SIZE, GRID_SIZE))
-                        # Occhi del serpente
+                        #EYES
                         eye_color = (255, 255, 255)
                         eye_size = GRID_SIZE // 4
                         eye_offset = GRID_SIZE // 4
-                        if self.direction[0] == 1:  # Destra
+                        if self.direction[0] == 1:  # right
                             left_eye = (segment[0] * GRID_SIZE + GRID_SIZE - eye_offset, 
                                       segment[1] * GRID_SIZE + eye_offset)
                             right_eye = (segment[0] * GRID_SIZE + GRID_SIZE - eye_offset, 
                                        segment[1] * GRID_SIZE + GRID_SIZE - eye_offset - eye_size)
-                        elif self.direction[0] == -1:  # Sinistra
+                        elif self.direction[0] == -1:  # left
                             left_eye = (segment[0] * GRID_SIZE + eye_offset - eye_size, 
                                       segment[1] * GRID_SIZE + eye_offset)
                             right_eye = (segment[0] * GRID_SIZE + eye_offset - eye_size, 
                                        segment[1] * GRID_SIZE + GRID_SIZE - eye_offset - eye_size)
-                        elif self.direction[1] == -1:  # Su
+                        elif self.direction[1] == -1:  # up
                             left_eye = (segment[0] * GRID_SIZE + eye_offset, 
                                       segment[1] * GRID_SIZE + eye_offset - eye_size)
                             right_eye = (segment[0] * GRID_SIZE + GRID_SIZE - eye_offset - eye_size, 
                                        segment[1] * GRID_SIZE + eye_offset - eye_size)
-                        else:  # Giù
+                        else:  # down
                             left_eye = (segment[0] * GRID_SIZE + eye_offset, 
                                       segment[1] * GRID_SIZE + GRID_SIZE - eye_offset)
                             right_eye = (segment[0] * GRID_SIZE + GRID_SIZE - eye_offset - eye_size, 
@@ -571,7 +588,7 @@ class Game:
                         pygame.draw.rect(self.screen, eye_color, (*left_eye, eye_size, eye_size))
                         pygame.draw.rect(self.screen, eye_color, (*right_eye, eye_size, eye_size))
                     else:
-                        # Effetto gradiente per il corpo
+                        #Gradient effect for the body
                         alpha = max(0.3, 1 - i / len(self.snake))
                         segment_color = (int(color[0] * alpha), 
                                        int(color[1] * alpha), 
@@ -580,13 +597,13 @@ class Game:
                                       (segment[0] * GRID_SIZE + 1, segment[1] * GRID_SIZE + 1,
                                        GRID_SIZE - 2, GRID_SIZE - 2))
 
-                # Disegno cibo con effetto pulsante
+                #Food design with button effect
                 self.food_color = self.pulse_color()
                 pygame.draw.rect(self.screen, self.food_color,
                               (self.food[0] * GRID_SIZE, self.food[1] * GRID_SIZE,
                                GRID_SIZE, GRID_SIZE))
                 
-                # Disegno particelle
+                #Drawing particles
                 for particle in self.particle_effects:
                     alpha = int(255 * (particle['ttl']))
                     color = (*particle['color'][:3], alpha)
@@ -594,7 +611,7 @@ class Game:
                                      (int(particle['pos'][0]), int(particle['pos'][1])), 
                                      3)
 
-                # Disegno punteggio con effetto ombra
+                #Score drawing with shadow effect
                 score_text = FONT_LARGE.render(f"Score: {self.score}", True, WHITE)
                 score_shadow = FONT_LARGE.render(f"Score: {self.score}", True, (40, 40, 40))
                 score_rect = score_text.get_rect(topleft=(20, 20))
@@ -602,7 +619,7 @@ class Game:
                 self.screen.blit(score_text, score_rect)
 
                 if settings['mode'] == GameMode.TIME:
-                    # Mostra il tempo rimanente con effetto ombra
+                    #Show remaining time with shadow effect
                     minutes = int(remaining_time // 60)
                     seconds = int(remaining_time % 60)
                     time_text = FONT_LARGE.render(f"Time: {minutes}:{seconds:02d}", True, WHITE)
@@ -612,14 +629,14 @@ class Game:
                     self.screen.blit(time_text, time_rect)
 
                 pygame.display.flip()
-                self.clock.tick(60)  # Mantiene 60 FPS costanti
+                self.clock.tick(60)  
 
-            # Game Over screen
+            # Show the Game Over screen (only if the game is over and the player did not press ESC to exit: not self.game_quit)
             if game_over and not self.game_quit:
                 self.show_game_over(settings['player_name'], self.score)
-                
-                # Salva statistiche
+                # Save game statistics
                 if self.score > 0:
+                    #A new statistics entry is created and added to the self.stats list 
                     self.stats.append({
                         'player_name': settings['player_name'],
                         'score': self.score,
@@ -627,8 +644,9 @@ class Game:
                         'difficulty': settings['difficulty'].name,
                         'duration': time.time() - start_time
                     })
+                    #writes the data to a json file to keep it even after the game is closed
                     self.save_stats()
-
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     def show_game_over(self, player_name, score):
         alpha = 0
         fade_speed = 5
