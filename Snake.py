@@ -328,8 +328,8 @@ class Game:
                     pygame.draw.rect(self.screen, (0, color_value//4, color_value//4), 
                                    (x, y, 2, 2))
 
-            #draw the title MODERN SNAKE 
-            title = FONT_LARGE.render("MODERN SNAKE", True, WHITE)
+            #draw the title THE GREAT SNAKE 
+            title = FONT_LARGE.render("THE GREAT SNAKE", True, WHITE)
             title_pos = (WINDOW_SIZE//2, start_y - 80)
             title_rect = title.get_rect(center=title_pos)
             self.screen.blit(title, title_rect)
