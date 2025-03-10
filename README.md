@@ -1,6 +1,6 @@
-# Modern Snake Game
+# The Great Snake Game
 
-**Modern Snake Game** is an advanced implementation of the classic Snake game developed in Python using the Pygame library. This modern version features multiple game modes, difficulty levels, barrier types, customizable aesthetics, and a comprehensive statistics tracking system.
+**The Great Snake Game** is an advanced implementation of the classic Snake game developed in Python using the Pygame library. This modern version features multiple game modes, difficulty levels, barrier types, customizable aesthetics, and a comprehensive statistics tracking system.
 
 ## Features
 
@@ -123,22 +123,22 @@ The application stores game statistics in a local file:
 ## Screenshots
 
 ### Main Menu
-![Main Menu Screenshot](screenshots/menu.png)
+![Main Menu Screenshot](screenshots/1.png)
 
 ### Gameplay - Standard Mode
-![Gameplay Screenshot](screenshots/gameplay_standard.png)
+![Gameplay Screenshot](screenshots/2.png)
 
 ### Gameplay - Border Mode
-![Gameplay Screenshot](screenshots/gameplay_border.png)
+![Gameplay Screenshot](screenshots/3.png)
 
 ### Gameplay - Random Barriers Mode
-![Gameplay Screenshot](screenshots/gameplay_random.png)
+![Gameplay Screenshot](screenshots/4.png)
 
 ### Game Over Screen
-![Game Over Screenshot](screenshots/game_over.png)
+![Game Over Screenshot](screenshots/5.png)
 
 ### Statistics Screen
-![Statistics Screenshot](screenshots/statistics.png)
+![Statistics Screenshot](screenshots/6.png)
 
 ## Contributions
 
