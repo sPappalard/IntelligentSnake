@@ -2,6 +2,9 @@
 
 **The Great Snake Game** is an advanced implementation of the classic Snake game developed in Python using the Pygame library. This modern version features multiple game modes, difficulty levels, barrier types, customizable aesthetics, and a comprehensive statistics tracking system.
 
+## Video Demo
+![](screenshots/7.gif)
+
 ## Features
 
 ### Game Modes
