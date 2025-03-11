@@ -58,7 +58,7 @@ pip install pygame
 1. Clone or download this repository
 2. Ensure Python 3.x is installed on your system
 3. Install Pygame as described above
-4. Run the game
+4. Run the game and enjoy
 
 ## How to Play
 
